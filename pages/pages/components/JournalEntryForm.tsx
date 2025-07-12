@@ -1,32 +1,52 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../../../../lib/supabase' // ✅ Correct path
+import { useRouter } from 'next/router'
 
 export default function JournalEntryForm({ userId }: { userId: string }) {
   const [entry, setEntry] = useState('')
-  const [mood, setMood] = useState('🙂')
-  const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const router = useRouter()
 
   async function handleSubmit(e: any) {
     e.preventDefault()
-    const { error } = await supabase.from('journal_entries').insert([{ user_id: userId, content: entry, mood }])
-    if (!error) {
+    setLoading(true)
+    setMessage('')
+
+    const { error } = await supabase.from('journal_entries').insert([
+      { content: entry, user_id: userId },
+    ])
+
+    if (error) {
+      setMessage('Something went wrong. Please try again.')
+    } else {
+      setMessage('Entry saved successfully!')
       setEntry('')
-      setMood('🙂')
-      setSubmitted(true)
-      setTimeout(() => setSubmitted(false), 3000)
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1500)
     }
+
+    setLoading(false)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <label className="block text-sm font-medium">Mood</label>
-      <select value={mood} onChange={(e) => setMood(e.target.value)} className="w-full p-2 rounded bg-gray-800 text-white">
-        <option>😃</option><option>🙂</option><option>😐</option><option>😔</option><option>😢</option>
-      </select>
-      <label className="block text-sm font-medium mt-4">Today’s Reflection</label>
-      <textarea value={entry} onChange={(e) => setEntry(e.target.value)} rows={5} className="w-full p-3 rounded bg-gray-800 text-white" required placeholder="Write your thoughts..." />
-      <button type="submit" className="bg-indigo-600 py-2 px-4 rounded hover:bg-indigo-500 transition">Save Entry</button>
-      {submitted && <p className="text-green-400">Entry saved successfully!</p>}
+    <form onSubmit={handleSubmit} className="space-y-4 bg-gray-800 p-6 rounded-xl shadow-md text-white">
+      <textarea
+        value={entry}
+        onChange={(e) => setEntry(e.target.value)}
+        placeholder="Write your journal entry here..."
+        className="w-full h-32 p-3 rounded bg-gray-700 placeholder:text-gray-300"
+        required
+      />
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-indigo-600 py-2 rounded hover:bg-indigo-500 transition"
+      >
+        {loading ? 'Saving...' : 'Save Entry'}
+      </button>
+      {message && <p className="text-sm text-center text-green-400">{message}</p>}
     </form>
   )
 }

@@ -4,49 +4,47 @@ import { supabase } from '../lib/supabase'
 
 export default function JournalEntryForm({ userId }: { userId: string }) {
   const [entry, setEntry] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
-    setMessage('')
+    if (!entry.trim()) return
 
     const { error } = await supabase.from('journal_entries').insert([
-      { user_id: userId, content: entry },
+      {
+        user_id: userId,
+        content: entry
+      }
     ])
 
     if (error) {
-      setMessage('❌ Failed to save entry. Try again.')
+      setStatus('❌ Failed to save entry.')
+      console.error(error)
     } else {
-      setMessage('✅ Saved! Every word brings you closer.')
+      setStatus('✅ Entry saved successfully!')
       setEntry('')
     }
-
-    setLoading(false)
   }
 
   return (
-    <div className="max-w-xl mx-auto mt-10 bg-gray-800 text-white p-6 rounded-2xl shadow-lg">
-      <h2 className="text-xl font-bold mb-4">Today’s Reflection</h2>
+    <div className="max-w-xl mx-auto mt-10 bg-gray-900 text-white p-6 rounded-2xl shadow-lg">
+      <h2 className="text-xl font-bold mb-4">New Journal Entry</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
           value={entry}
           onChange={(e) => setEntry(e.target.value)}
-          placeholder="Write what you feel, what you did, or where you’re headed..."
-          className="w-full p-3 rounded bg-gray-700 placeholder:text-gray-400"
+          placeholder="Write something reflective..."
+          className="w-full p-3 rounded bg-gray-800 placeholder:text-gray-400"
           rows={5}
-          required
         />
         <button
           type="submit"
-          disabled={loading}
-          className="bg-indigo-600 w-full py-2 rounded hover:bg-indigo-500 transition"
+          className="bg-green-600 w-full py-2 rounded hover:bg-green-500 transition"
         >
-          {loading ? 'Saving...' : 'Save Reflection'}
+          Save Entry
         </button>
+        {status && <p className="text-sm mt-2">{status}</p>}
       </form>
-      {message && <p className="mt-4 text-sm text-green-400">{message}</p>}
     </div>
   )
 }

@@ -1,52 +1,52 @@
+// components/JournalEntryForm.tsx
 import { useState } from 'react'
-import { supabase } from '../lib/supabase' // ✅ simplified path
-import { useRouter } from 'next/router'
+import { supabase } from '../lib/supabase'
 
 export default function JournalEntryForm({ userId }: { userId: string }) {
   const [entry, setEntry] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const router = useRouter()
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setMessage('')
 
     const { error } = await supabase.from('journal_entries').insert([
-      { content: entry, user_id: userId },
+      { user_id: userId, content: entry },
     ])
 
     if (error) {
-      setMessage('Something went wrong. Please try again.')
+      setMessage('❌ Failed to save entry. Try again.')
     } else {
-      setMessage('Entry saved successfully!')
+      setMessage('✅ Saved! Every word brings you closer.')
       setEntry('')
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1500)
     }
 
     setLoading(false)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-gray-800 p-6 rounded-xl shadow-md text-white">
-      <textarea
-        value={entry}
-        onChange={(e) => setEntry(e.target.value)}
-        placeholder="Write your journal entry here..."
-        className="w-full h-32 p-3 rounded bg-gray-700 placeholder:text-gray-300"
-        required
-      />
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-indigo-600 py-2 rounded hover:bg-indigo-500 transition"
-      >
-        {loading ? 'Saving...' : 'Save Entry'}
-      </button>
-      {message && <p className="text-sm text-center text-green-400">{message}</p>}
-    </form>
+    <div className="max-w-xl mx-auto mt-10 bg-gray-800 text-white p-6 rounded-2xl shadow-lg">
+      <h2 className="text-xl font-bold mb-4">Today’s Reflection</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <textarea
+          value={entry}
+          onChange={(e) => setEntry(e.target.value)}
+          placeholder="Write what you feel, what you did, or where you’re headed..."
+          className="w-full p-3 rounded bg-gray-700 placeholder:text-gray-400"
+          rows={5}
+          required
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-indigo-600 w-full py-2 rounded hover:bg-indigo-500 transition"
+        >
+          {loading ? 'Saving...' : 'Save Reflection'}
+        </button>
+      </form>
+      {message && <p className="mt-4 text-sm text-green-400">{message}</p>}
+    </div>
   )
 }
